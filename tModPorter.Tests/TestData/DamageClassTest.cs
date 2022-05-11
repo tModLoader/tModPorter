@@ -1,7 +1,5 @@
-﻿using Terraria;
+using Terraria;
 using Terraria.ModLoader;
-
-namespace tModPorter.Tests.TestData;
 
 public class DamageClassTest : Mod
 {
@@ -13,7 +11,7 @@ public class DamageClassTest : Mod
         item.summon = true;
     }
 
-    public void MethodB()
+    public void MethodB(AnotherItemClass item)
     {
         item.melee = true;
 

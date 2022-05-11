@@ -41,6 +41,26 @@ public class AutomaticTest {
 		//File.WriteAllText(Path.ChangeExtension(tree.FilePath, ".Out.cs"), result.ToFullString());
 		Assert.AreEqual(fixedContent, result.ToFullString());
 	}
+
+	[Test]
+	public async Task FixedModCompiles() {
+		using MSBuildWorkspace workspace = MSBuildWorkspace.Create();
+
+		var proj = await workspace.OpenProjectAsync(TestModPath[..^".csproj".Length] + "Fixed.csproj");
+		var comp = (await proj.GetCompilationAsync())!;
+		using var peStream = new MemoryStream();
+		var result = comp.Emit(peStream);
+		foreach (var diag in result.Diagnostics) {
+			if (diag.Severity == DiagnosticSeverity.Error)
+				TestContext.Error.WriteLine(diag);
+			else
+				TestContext.Out.WriteLine(diag);
+		}
+
+		if (!result.Success) {
+			Assert.Fail("Compilation Failed");
+		}
+	}
 	
 	[TestCaseSource(nameof(GetTestCases))]
 	public async Task RewriteCodeTwice(Document doc) {

@@ -1,9 +1,7 @@
-﻿using Terraria;
+using Terraria;
 using Terraria.ModLoader;
 
-namespace tModPorter.Tests.TestData;
-
-public class AdvancedIdentifiersTest : Mod
+public class AdvancedIdentifiersTest : ModItem
 {
     public void MethodA()
     {

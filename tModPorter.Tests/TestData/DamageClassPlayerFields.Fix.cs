@@ -1,9 +1,7 @@
 using Terraria;
 using Terraria.ModLoader;
 
-namespace tModPorter.Tests.TestData;
-
-public class DamageClassPlayerFields : Mod {
+public class DamageClassPlayerFields : ModPlayer {
 	public void MethodA() {
 		Player.GetAttackSpeed(DamageClass.Melee) = 1;
 		Player.GetKnockback(DamageClass.Summon).Base = 1;

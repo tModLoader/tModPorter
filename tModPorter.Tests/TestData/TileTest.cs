@@ -1,7 +1,5 @@
 ﻿using Terraria;
-using Terraria.ModLoader;
-
-namespace tModPorter.Tests.TestData; 
+using Terraria.ModLoader; 
 
 public class TileTest {
 	void A() {

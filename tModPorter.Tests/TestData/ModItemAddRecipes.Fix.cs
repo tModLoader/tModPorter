@@ -1,9 +1,7 @@
-using Terraria;
-using Terraria.ModLoader;
+using Terraria.ID;
+using Terraria.ModLoader; 
 
-namespace tModPorter.Tests.TestData; 
-
-public class AddRecipes : ModItem {
+public class ModItemAddRecipes : ModItem {
 	public override void AddRecipes() {
 		CreateRecipe(1)
 			.AddIngredient(ItemID.Wood, 10)
@@ -17,6 +15,6 @@ public class AddRecipes : ModItem {
 	public void Method() { }
 
 	class A {
-		public void B() { }
+		public static void B() { }
 	}
 }

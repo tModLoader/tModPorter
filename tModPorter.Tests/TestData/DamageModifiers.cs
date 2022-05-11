@@ -1,14 +1,13 @@
-﻿using Terraria;
+using Terraria;
 using Terraria.ModLoader;
 
-namespace tModPorter.Tests.TestData;
-
-public class DamageModifiers : Mod
+public class DamageModifiers : ModPlayer
 {
-    public void MethodA()
-    {
-        item.magicDamage += 2;
-        item.meleeCrit *= 5;
-        item.minionDamage = 8;
+    public override void UpdateEquips() {
+        player.magicDamage += 2;
+        player.meleeCrit *= 5;
+#if COMPILE_ERROR
+        player.minionDamage = 8;
+#endif
     }
 }

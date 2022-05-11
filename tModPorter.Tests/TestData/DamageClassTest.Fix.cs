@@ -1,7 +1,5 @@
-﻿using Terraria;
+using Terraria;
 using Terraria.ModLoader;
-
-namespace tModPorter.Tests.TestData;
 
 public class DamageClassTest : Mod
 {
@@ -13,9 +11,9 @@ public class DamageClassTest : Mod
         item.DamageType = DamageClass.Summon;
     }
 
-    public void MethodB()
+    public void MethodB(AnotherItemClass item)
     {
-        Item.DamageType = DamageClass.Melee;
+        item.melee = true;
 
         int melee = 0;
         melee = 1;

@@ -1,9 +1,7 @@
 using Terraria;
 using Terraria.ModLoader;
 
-namespace tModPorter.Tests.TestData;
-
-public class DamageClassPlayerFields : Mod {
+public class DamageClassPlayerFields : ModPlayer {
 	public void MethodA() {
 		player.meleeSpeed = 1;
 		player.minionKB = 1;

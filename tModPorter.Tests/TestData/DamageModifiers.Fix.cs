@@ -1,14 +1,13 @@
-﻿using Terraria;
+using Terraria;
 using Terraria.ModLoader;
 
-namespace tModPorter.Tests.TestData;
-
-public class DamageModifiers : Mod
+public class DamageModifiers : ModPlayer
 {
-    public void MethodA()
-    {
-        Item.GetDamage(DamageClass.Magic) += 2;
-        Item.GetCritChance(DamageClass.Melee) *= 5;
-        Item.GetDamage(DamageClass.Summon) = 8;
+    public override void UpdateEquips() {
+        Player.GetDamage(DamageClass.Magic) += 2;
+        Player.GetCritChance(DamageClass.Melee) *= 5;
+#if COMPILE_ERROR
+        Player.GetDamage(DamageClass.Summon) = 8;
+#endif
     }
 }

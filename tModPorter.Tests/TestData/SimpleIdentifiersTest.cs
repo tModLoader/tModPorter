@@ -1,10 +1,9 @@
-﻿using Terraria;
+using Terraria;
 using Terraria.ModLoader;
-
-namespace tModPorter.Tests.TestData;
 
 public class SimpleIdentifiersTest : Mod
 {
+#if COMPILE_ERROR
     public void MethodA()
     {
         projectile.FieldA = 1;
@@ -12,6 +11,7 @@ public class SimpleIdentifiersTest : Mod
         player.FieldA = 1;
         item.FieldA = 1;
     }
+#endif
 
     public void MethodB()
     {

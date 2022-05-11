@@ -1,14 +1,18 @@
-﻿using Terraria;
-using Terraria.ModLoader;
-
-namespace tModPorter.Tests.TestData; 
+using Terraria.ModLoader; 
 
 public class TooltipLineFields {
-	void A() {
-		TooltipLine line = new TooltipLine();
-		line.Text = "";
-		line.IsModifier = true;
-		line.IsModifierBad = false;
-		line.OverrideColor = 0;
-	}
+    void A() {
+        TooltipLine line = new TooltipLine(null, "", "");
+        line.Text = "";
+        line.IsModifier = true;
+        line.IsModifierBad = false;
+        line.OverrideColor = null;
+
+        line = new TooltipLine(null, "", "") {
+            Text = "",
+            IsModifier = true,
+            IsModifierBad = false,
+            OverrideColor = null
+        };
+    }
 }
