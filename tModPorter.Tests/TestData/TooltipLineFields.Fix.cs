@@ -1,18 +1,18 @@
 using Terraria.ModLoader; 
 
 public class TooltipLineFields {
-    void A() {
-        TooltipLine line = new TooltipLine(null, "", "");
-        line.Text = "";
-        line.IsModifier = true;
-        line.IsModifierBad = false;
-        line.OverrideColor = null;
+	void A() {
+		TooltipLine line = new TooltipLine(null, "", "");
+		line.Text = "";
+		line.IsModifier = true;
+		line.IsModifierBad = false;
+		line.OverrideColor = null;
 
-        line = new TooltipLine(null, "", "") {
-            Text = "",
-            IsModifier = true,
-            IsModifierBad = false,
-            OverrideColor = null
-        };
-    }
+		line = new TooltipLine(null, "", "") {
+			Text = "",
+			IsModifier = true,
+			IsModifierBad = false,
+			OverrideColor = null
+		};
+	}
 }

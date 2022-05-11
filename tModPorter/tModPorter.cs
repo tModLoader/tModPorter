@@ -67,7 +67,7 @@ public class tModPorter {
 
 	private async Task ProcessFile(Document document, IProgress<double>? progress) {
 		SyntaxTree root = await document.GetSyntaxTreeAsync() ??
-		                  throw new Exception("No syntax root - " + document.FilePath);
+						  throw new Exception("No syntax root - " + document.FilePath);
 
 		SyntaxNode rootNode = await root.GetRootAsync();
 

@@ -21,8 +21,8 @@ public class PreReforgeRename : BaseRewriter {
 
 		// Get class declaration and match base class to GlobalItem
 		if (!TryGetAncestorNode(node, out ClassDeclarationSyntax classDeclaration) || classDeclaration.BaseList == null ||
-		    classDeclaration.BaseList.Types.Count == 0 ||
-		    classDeclaration.BaseList.Types.All(x => x.Type.ToString() != "GlobalItem")) return;
+			classDeclaration.BaseList.Types.Count == 0 ||
+			classDeclaration.BaseList.Types.All(x => x.Type.ToString() != "GlobalItem")) return;
 
 		AddTokenToRewrite(declaration.Identifier);
 	}

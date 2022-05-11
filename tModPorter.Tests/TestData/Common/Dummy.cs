@@ -2,6 +2,6 @@
 
 public class Dummy
 {
-    public int FieldA;
-    public string FieldB;
+	public int FieldA;
+	public string FieldB;
 }

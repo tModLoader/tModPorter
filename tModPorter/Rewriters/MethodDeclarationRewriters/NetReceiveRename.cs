@@ -22,8 +22,8 @@ public class NetReceiveRename : BaseRewriter {
 
 		// Get class declaration and match base class to ModItem
 		if (!TryGetAncestorNode(node, out ClassDeclarationSyntax classDeclaration) || classDeclaration.BaseList == null ||
-		    classDeclaration.BaseList.Types.Count == 0 ||
-		    classDeclaration.BaseList.Types.All(x => x.Type.ToString() != "ModItem")) return;
+			classDeclaration.BaseList.Types.Count == 0 ||
+			classDeclaration.BaseList.Types.All(x => x.Type.ToString() != "ModItem")) return;
 
 		AddTokenToRewrite(declaration.Identifier);
 	}

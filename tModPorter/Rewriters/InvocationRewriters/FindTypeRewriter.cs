@@ -40,11 +40,11 @@ public class FindTypeRewriter : BaseRewriter {
 			return;
 
 		if ((memberAccess != null && HasSymbol(memberAccess.Name, out _)) ||
-		    (memberBinding != null && HasSymbol(memberBinding.Name, out _)))
+			(memberBinding != null && HasSymbol(memberBinding.Name, out _)))
 			return;
 
 		if (_modTypes.Any(m => m.Key == memberAccess?.Name.ToString()) ||
-		    _modTypes.Any(m => m.Key == memberBinding?.Name.ToString()))
+			_modTypes.Any(m => m.Key == memberBinding?.Name.ToString()))
 			AddNodeToRewrite(nodeSyntax);
 	}
 

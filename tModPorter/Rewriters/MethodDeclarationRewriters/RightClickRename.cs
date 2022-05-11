@@ -21,8 +21,8 @@ public class RightClickRename : BaseRewriter {
 
 		// Get class declaration and match base class to ModItem
 		if (!TryGetAncestorNode(node, out ClassDeclarationSyntax classDeclaration) || classDeclaration.BaseList == null ||
-		    classDeclaration.BaseList.Types.Count == 0 ||
-		    classDeclaration.BaseList.Types.All(x => x.Type.ToString() != "ModTile")) return;
+			classDeclaration.BaseList.Types.Count == 0 ||
+			classDeclaration.BaseList.Types.All(x => x.Type.ToString() != "ModTile")) return;
 
 		AddTokenToRewrite(declaration.Identifier);
 	}

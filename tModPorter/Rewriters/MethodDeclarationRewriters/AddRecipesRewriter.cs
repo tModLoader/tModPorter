@@ -29,7 +29,7 @@ public class AddRecipesRewriter : BaseRewriter {
 
 		// Make sure the body isn't null, that the method name is "AddRecipes", that it has statements, and that it hasn't already been ported
 		if (nodeMethod.Body != null && nodeMethod.Identifier.Text == "AddRecipes"
-		                            && nodeMethod.Body.Statements.Count != 0 && !nodeMethod.Body.ToString().Contains("CreateRecipe"))
+									&& nodeMethod.Body.Statements.Count != 0 && !nodeMethod.Body.ToString().Contains("CreateRecipe"))
 			AddNodeToRewrite(node);
 	}
 
@@ -89,7 +89,7 @@ public class AddRecipesRewriter : BaseRewriter {
 					if (indentChar == '\t')
 						indent += "\t";
 					else
-						indent += "    ";
+						indent += "	";
 				}
 				return indent;
 			}

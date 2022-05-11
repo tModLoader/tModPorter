@@ -25,14 +25,14 @@ public abstract class BaseRewriter {
 	public virtual RewriterType RewriterType => RewriterType.None;
 
 	/// <summary>
-	///     Override this method to queue a modification to a node. The type of node depends on <see cref="RewriterType" />
+	///	 Override this method to queue a modification to a node. The type of node depends on <see cref="RewriterType" />
 	/// </summary>
 	/// <param name="node">The original node</param>
 	/// <returns>Return <see cref="node" /></returns>
 	public virtual void VisitNode(SyntaxNode node) { }
 
 	/// <summary>
-	///     Override this method to rewrite a node added using <see cref="AddNodeToRewrite" />
+	///	 Override this method to rewrite a node added using <see cref="AddNodeToRewrite" />
 	/// </summary>
 	/// <param name="node">The node to rewrite</param>
 	/// <returns>The rewritten node</returns>

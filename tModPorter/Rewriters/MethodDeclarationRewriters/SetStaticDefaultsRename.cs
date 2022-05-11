@@ -33,8 +33,8 @@ public class SetStaticDefaultsRename : BaseRewriter {
 
 		// Get class declaration and make sure the base types matches one of the singleton base types
 		if (!TryGetAncestorNode(node, out ClassDeclarationSyntax classDeclaration) || classDeclaration.BaseList == null ||
-		    classDeclaration.BaseList.Types.Count == 0 ||
-		    classDeclaration.BaseList.Types.All(x => !BaseTypesToModify.Contains(x.Type.ToString()))) return;
+			classDeclaration.BaseList.Types.Count == 0 ||
+			classDeclaration.BaseList.Types.All(x => !BaseTypesToModify.Contains(x.Type.ToString()))) return;
 
 		AddTokenToRewrite(declaration.Identifier);
 	}

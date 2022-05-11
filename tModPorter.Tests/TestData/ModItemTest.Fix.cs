@@ -4,7 +4,7 @@ using Terraria.ModLoader;
 
 public class ModItemTest : ModItem
 {
-    public override bool? UseItem(Player player) { return true; /* comment */ }
-    
-    public override void NetReceive(BinaryReader reader) { /* Empty */ }
+	public override bool? UseItem(Player player) { return true; /* comment */ }
+	
+	public override void NetReceive(BinaryReader reader) { /* Empty */ }
 }
