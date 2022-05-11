@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
@@ -68,6 +69,7 @@ public class AddRecipesRewriter : BaseRewriter {
 				continue;
 			}
 
+			string eol = memberAccessSyntax.SyntaxTree.GetRoot().DescendantTrivia().Where(t => t.IsKind(SyntaxKind.EndOfLineTrivia)).Select(t => t.ToFullString()).GroupBy(x => x).MaxBy(g => g.Count()).First();
 			string leadingTrivia = memberAccessSyntax.GetLeadingTrivia().ToString();
 			int numIndentations;
 			char indentChar;
@@ -82,7 +84,7 @@ public class AddRecipesRewriter : BaseRewriter {
 			}
 
 			string GenerateIndent() {
-				string indent = "\r\n";
+				string indent = eol;
 				for (int i = 0; i < numIndentations + 1; i++) {
 					if (indentChar == '\t')
 						indent += "\t";

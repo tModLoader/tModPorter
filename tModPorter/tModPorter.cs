@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -28,7 +28,7 @@ public class tModPorter {
 
 			// Print message for WorkspaceFailed event to help diagnosing project load failures.
 			workspace.WorkspaceFailed += (o, e) => {
-				// TODO: Don't ignore this
+				Error.WriteLine(e.Diagnostic.ToString());
 			};
 
 			WriteLine($"Loading project: {projectPath}");

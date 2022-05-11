@@ -1,4 +1,4 @@
-﻿using Terraria;
+using Terraria;
 using Terraria.ModLoader;
 
 namespace tModPorter.Tests.TestData; 
@@ -16,8 +16,8 @@ public class AddRecipes : ModItem {
 	}
 	
 	public void Method() { }
-}
 
-class A {
-	public void B() { }
+	class A {
+		public void B() { }
+	}
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,9 +14,11 @@ namespace tModPorter.Tests;
 
 // TODO: Make test using tModPorter class
 public class AutomaticTest {
+	public static string TestModPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "../../../TestData/TestData.csproj"));
+	private static VisualStudioInstance instance = MSBuildLocator.RegisterDefaults();
+
 	private static Compilation? _compilation;
 	private static Project? _project;
-	private static Workspace? _workspace;
 
 	[OneTimeSetUp]
 	public async Task Setup() {
@@ -24,39 +26,39 @@ public class AutomaticTest {
 	}
 
 	[TestCaseSource(nameof(GetTestCases))]
-	public void RewriteCode(SyntaxTree tree) {
-		Document newDoc = _project!.Documents.First(x => x.FilePath == tree.FilePath);
+	public async Task RewriteCode(Document doc) {
+		SyntaxTree tree = await doc.GetSyntaxTreeAsync() ?? throw new NullReferenceException("Node has no syntax tree");
 		SemanticModel model = _compilation!.GetSemanticModel(tree);
 		SyntaxNode rootNode = tree.GetRoot();
 
-		CompilationUnitSyntax result = RewriteCodeOnce(newDoc, model, rootNode);
+		CompilationUnitSyntax result = RewriteCodeOnce(doc, model, rootNode);
 
 		string fixedFilePath = Path.ChangeExtension(tree.FilePath, ".Fix.cs");
 
 		Assert.True(File.Exists(fixedFilePath), $"File '{fixedFilePath}' doesn't exist.");
 		string fixedContent = File.ReadAllText(fixedFilePath);
 
+		//File.WriteAllText(Path.ChangeExtension(tree.FilePath, ".Out.cs"), result.ToFullString());
 		Assert.AreEqual(fixedContent, result.ToFullString());
 	}
 	
 	[TestCaseSource(nameof(GetTestCases))]
-	public async Task RewriteCodeTwice(SyntaxTree tree) {
-		Document newDoc = _project!.Documents.First(x => x.FilePath == tree.FilePath);
-		tree = await newDoc.GetSyntaxTreeAsync() ?? throw new NullReferenceException("Node has no syntax tree");
+	public async Task RewriteCodeTwice(Document doc) {
+		SyntaxTree tree = await doc.GetSyntaxTreeAsync() ?? throw new NullReferenceException("Node has no syntax tree");
 		SemanticModel model = _compilation!.GetSemanticModel(tree);
 		SyntaxNode rootNode = await tree.GetRootAsync();
 
-		CompilationUnitSyntax result = RewriteCodeOnce(newDoc, model, rootNode);
+		CompilationUnitSyntax result = RewriteCodeOnce(doc, model, rootNode);
 		
 		// Write the rewritten file to disk, so that we can then load it again with the .csproj
-		newDoc = newDoc.WithSyntaxRoot(result);
-		tree = await newDoc.GetSyntaxTreeAsync() ?? throw new NullReferenceException("Node has no syntax tree");
-		Compilation? newCompilation = await newDoc.Project.GetCompilationAsync();
+		doc = doc.WithSyntaxRoot(result);
+		tree = await doc.GetSyntaxTreeAsync() ?? throw new NullReferenceException("Node has no syntax tree");
+		Compilation? newCompilation = await doc.Project.GetCompilationAsync();
 		Assert.NotNull(newCompilation);
 		model = newCompilation!.GetSemanticModel(tree);
 		rootNode = await tree.GetRootAsync();
 
-		result = RewriteCodeOnce(newDoc, model, rootNode);
+		result = RewriteCodeOnce(doc, model, rootNode);
 
 		string fixedFilePath = Path.ChangeExtension(tree.FilePath, ".Fix.cs");
 
@@ -76,63 +78,26 @@ public class AutomaticTest {
 	}
 
 	private static async Task LoadProject(bool force = false) {
-		if (!force && _workspace is not null && _project is not null && _compilation is not null) return;
-		
-		if (!MSBuildLocator.IsRegistered)
-			MSBuildLocator.RegisterDefaults();
+		if (_project is not null && _compilation is not null) return;
 
 		using MSBuildWorkspace workspace = MSBuildWorkspace.Create();
-		_workspace = workspace;
-		
-		if (!File.Exists("TestData/TestData.csproj")) {
+
+		if (!File.Exists(TestModPath)) {
 			throw new FileNotFoundException("TestData.csproj not found.");
 		}
-		
-		_project = await workspace.OpenProjectAsync("TestData/TestData.csproj");
-		
-		_compilation = await _project.GetCompilationAsync();
 
-		if (_workspace is null) throw new NullReferenceException(nameof(_workspace));
-		if (_project is null) throw new NullReferenceException(nameof(_project));
+		_project = await workspace.OpenProjectAsync(TestModPath);
+		_compilation = await _project.GetCompilationAsync();
 		if (_compilation is null) throw new NullReferenceException(nameof(_compilation));
 	}
 
-	private static IEnumerable<SyntaxTree> GetSyntaxTrees() {
-		return GetSyntaxTreesAsync().ToEnumerable();
-	}
-
-	private static async IAsyncEnumerable<SyntaxTree> GetSyntaxTreesAsync() {
-		await LoadProject();
-		if (_project is null) {
-			throw new NullReferenceException(nameof(_project));
-		}
-		
-		foreach (Document document in _project.Documents) {
-			SyntaxTree tree = await document.GetSyntaxTreeAsync() ?? throw new Exception("No syntax tree found for: " + document.FilePath);
-			if (tree.FilePath.Replace('\\', '/').Contains("TestData/Common")) continue;
-			yield return tree;
-		}
-	}
-
 	public static IEnumerable<TestCaseData> GetTestCases() {
-		foreach (SyntaxTree tree in GetSyntaxTrees()) {
-			TestCaseData data = new TestCaseData(tree).SetName(Path.GetFileName(tree.FilePath));
-			yield return data;
-		}
+		LoadProject().GetAwaiter().GetResult();
+		return _project!.Documents
+			.Where(d => FilterTestCasePath(d.FilePath!.Replace('\\', '/')))
+			.Select(d => new TestCaseData(d).SetArgDisplayNames(Path.GetFileName(d.FilePath)!))
+			.ToArray();
 	}
-	
-	private static void CopyFilesRecursively(string sourcePath, string targetPath)
-	{
-		//Now Create all of the directories
-		foreach (string dirPath in Directory.GetDirectories(sourcePath, "*", SearchOption.AllDirectories))
-		{
-			Directory.CreateDirectory(dirPath.Replace(sourcePath, targetPath));
-		}
 
-		//Copy all the files & Replaces any files with the same name
-		foreach (string newPath in Directory.GetFiles(sourcePath, "*.*",SearchOption.AllDirectories))
-		{
-			File.Copy(newPath, newPath.Replace(sourcePath, targetPath), true);
-		}
-	}
+	private static bool FilterTestCasePath(string path) => !path.Contains("/Common/") && !path.Contains("/obj/");
 }

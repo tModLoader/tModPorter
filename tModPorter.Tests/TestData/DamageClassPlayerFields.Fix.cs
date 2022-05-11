@@ -1,4 +1,4 @@
-﻿using Terraria;
+using Terraria;
 using Terraria.ModLoader;
 
 namespace tModPorter.Tests.TestData;
@@ -14,9 +14,9 @@ public class DamageClassPlayerFields : Mod {
 	public void MethodB(Player player) {
 		player.GetAttackSpeed(DamageClass.Melee) = 1;
 		A.meleeSpeed = 2;
-	} 
-}
+	}
 
-class A {
-	public static int meleeSpeed = 0;
+	class A {
+		public static int meleeSpeed = 0;
+	}
 }
