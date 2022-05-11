@@ -39,7 +39,7 @@ public class AutomaticTest {
 		string fixedContent = File.ReadAllText(fixedFilePath);
 
 		//File.WriteAllText(Path.ChangeExtension(tree.FilePath, ".Out.cs"), result.ToFullString());
-		Assert.AreEqual(fixedContent, result.ToFullString());
+		FileAssert.Equal(fixedContent, result.ToFullString());
 	}
 
 	[Test]
@@ -85,7 +85,7 @@ public class AutomaticTest {
 		Assert.True(File.Exists(fixedFilePath), $"File '{fixedFilePath}' doesn't exist.");
 		string fixedContent = await File.ReadAllTextAsync(fixedFilePath);
 
-		Assert.AreEqual(fixedContent, result.ToFullString());
+		FileAssert.Equal(fixedContent, result.ToFullString());
 	}
 	
 	private static CompilationUnitSyntax RewriteCodeOnce(Document document, SemanticModel model, SyntaxNode rootNode) {
