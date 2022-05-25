@@ -30,6 +30,14 @@ public static class Config
 		RenameRewriter.RenameInstanceField("Terraria.Tile", from: "wallFrameX",	to: "WallFrameX");
 		RenameRewriter.RenameInstanceField("Terraria.Tile", from: "wallFrameY",	to: "WallFrameY");
 
+		RenameRewriter.RenameStaticField("Terraria.ID.ItemUseStyleID", from: "HoldingUp",	to: "HoldUp");
+		RenameRewriter.RenameStaticField("Terraria.ID.ItemUseStyleID", from: "HoldingOut",	to: "Shoot");
+		RenameRewriter.RenameStaticField("Terraria.ID.ItemUseStyleID", from: "SwingThrow",	to: "Swing");
+		RenameRewriter.RenameStaticField("Terraria.ID.ItemUseStyleID", from: "EatingUsing", to: "EatFood");
+		RenameRewriter.RenameStaticField("Terraria.ID.ItemUseStyleID", from: "Stabbing",	to: "Thrust");
+
 		//RenameRewriter.RenameType(from: "Terraria.ModLoader.ModMountData", to: "Terraria.ModLoader.ModMount");
+
+
 	}
 }

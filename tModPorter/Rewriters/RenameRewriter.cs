@@ -1,18 +1,16 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Operations;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace tModPorter.Rewriters;
 
 public class RenameRewriter : BaseRewriter
 {
-	private static List<(string type, string from, string to, bool isStatic)> fieldRenames = new();
+	private static List<(string type, string from, string to)> fieldRenames = new();
 
-	public static void RenameInstanceField(string type, string from, string to) => fieldRenames.Add((type, from, to, false));
-	public static void RenameStaticField(string type, string from, string to) => fieldRenames.Add((type, from, to, true));
+	public static void RenameInstanceField(string type, string from, string to) => fieldRenames.Add((type, from, to));
+	public static void RenameStaticField(string type, string from, string to) => fieldRenames.Add((type, from, to));
 
 	public RenameRewriter(SemanticModel model) : base(model) { }
 
@@ -34,7 +32,7 @@ public class RenameRewriter : BaseRewriter
 	private IdentifierNameSyntax RefactorSpeculative(IdentifierNameSyntax nameSyntax) {
 		var nameToken = nameSyntax.Identifier;
 
-		foreach (var (type, from, to, isStatic) in fieldRenames) {
+		foreach (var (type, from, to) in fieldRenames) {
 			if (from != nameToken.Text)
 				continue;
 
@@ -53,7 +51,7 @@ public class RenameRewriter : BaseRewriter
 
 		var nameToken = nameSyntax.Identifier;
 
-		foreach (var (type, from, to, isStatic) in fieldRenames) {
+		foreach (var (type, from, to) in fieldRenames) {
 			if (from != nameToken.Text || !instType.InheritsFrom(type))
 				continue;
 
