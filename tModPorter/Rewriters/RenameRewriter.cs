@@ -12,8 +12,6 @@ public class RenameRewriter : BaseRewriter
 	public static void RenameInstanceField(string type, string from, string to) => fieldRenames.Add((type, from, to));
 	public static void RenameStaticField(string type, string from, string to) => fieldRenames.Add((type, from, to));
 
-	public RenameRewriter(SemanticModel model) : base(model) { }
-
 	public override SyntaxNode VisitIdentifierName(IdentifierNameSyntax node) {
 		return node.Parent switch {
 			MemberAccessExpressionSyntax memberAccess when node == memberAccess.Name && model.GetOperation(memberAccess) is IInvalidOperation =>

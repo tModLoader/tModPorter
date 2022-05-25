@@ -1,9 +1,13 @@
-using Microsoft.CodeAnalysis;
+using System.Collections.Generic;
 using tModPorter.Rewriters;
+
+namespace tModPorter;
 
 public static class Config
 {
-	public static BaseRewriter Create(SemanticModel model) => new RenameRewriter(model);
+	public static List<BaseRewriter> CreateRewriters() => new() {
+		new RenameRewriter()
+	};
 
 	static Config() {
 		RenameRewriter.RenameInstanceField("Terraria.ModLoader.ModType",		from: "mod",			to: "Mod");

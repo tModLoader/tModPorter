@@ -90,18 +90,19 @@ public class tModPorter {
 	}
 
 	public static async Task<Document?> Rewrite(Document doc) {
-		bool changed = false;
+		var originalDoc = doc;
 		while (true) {
-			var root = await doc.GetSyntaxRootAsync() ?? throw new Exception("No syntax root: " + doc.FilePath);
-			var rewriter = Config.Create(await doc.GetSemanticModelAsync() ?? throw new Exception("No semantic model: " + doc.FilePath));
-			var node = rewriter.Visit(root);
-			if (node == root)
-				break;
+			var docBeforePass = doc;
 
-			changed = true;
-			doc = doc.WithSyntaxRoot(node);
+			foreach (var rewriter in Config.CreateRewriters()) {
+				doc = await rewriter.Rewrite(doc);
+			}
+
+			if (doc == docBeforePass)
+				break;
 		}
-		return changed ? doc : null;
+
+		return doc == originalDoc ? null : doc;
 	}
 
 	private class ConsoleProgressReporter : IProgress<ProjectLoadProgress> {
