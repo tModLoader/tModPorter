@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Operations;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace tModPorter.Rewriters;
 
@@ -18,6 +19,9 @@ public class RenameRewriter : BaseRewriter
 		return node.Parent switch {
 			MemberAccessExpressionSyntax memberAccess when node == memberAccess.Name && model.GetOperation(memberAccess) is IInvalidOperation =>
 				Refactor(node, model.GetTypeInfo(memberAccess.Expression).Type),
+
+			MemberBindingExpressionSyntax memberBinding when model.GetOperation(memberBinding) is IInvalidOperation op && op.Children.Single() is IConditionalAccessInstanceOperation targetOp =>
+				Refactor(node, targetOp.Type),
 
 			AssignmentExpressionSyntax assignment when assignment.Parent is InitializerExpressionSyntax && model.GetOperation(assignment) is IAssignmentOperation { Target: IInvalidOperation, Parent: var parent } =>
 				Refactor(node, parent.Type),

@@ -30,6 +30,11 @@ public class SimpleIdentifiersTest : Mod
 		return player.player.inventory[0].modItem.item.modItem.mod;
 	}
 
+	public Mod ConditionalAccess(ModPlayer player) {
+		Console.WriteLine(player?.Player.inventory);
+		return player?.player?.inventory[0]?.modItem?.item?.modItem?.mod;
+	}
+
 #if COMPILE_ERROR
 	public void NoChangeCompileErrors()
 	{
