@@ -10,7 +10,6 @@ public class TooltipLineTests
 		line.overrideColor = null;
 
 		line = new TooltipLine(null, "", "") {
-			Text = "",
 			text = "",
 			isModifier = true,
 			isModifierBad = false,

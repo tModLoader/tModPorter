@@ -1,6 +1,9 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Operations;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace tModPorter.Rewriters;
 
@@ -14,35 +17,50 @@ public class RenameRewriter : BaseRewriter
 	public RenameRewriter(SemanticModel model) : base(model) { }
 
 	public override SyntaxNode VisitIdentifierName(IdentifierNameSyntax node) {
-		if (Refactor(node, node) is IdentifierNameSyntax repl) {
-			return repl;
-		}
+		return node.Parent switch {
+			MemberAccessExpressionSyntax memberAccess when node == memberAccess.Name && model.GetOperation(memberAccess) is IInvalidOperation =>
+				Refactor(node, model.GetTypeInfo(memberAccess.Expression).Type),
 
-		return base.VisitIdentifierName(node);
+			AssignmentExpressionSyntax assignment when assignment.Parent is InitializerExpressionSyntax && model.GetOperation(assignment) is IAssignmentOperation { Target: IInvalidOperation, Parent: var parent } =>
+				Refactor(node, parent.Type),
+
+			_ when model.GetOperation(node) is IInvalidOperation =>
+				RefactorSpeculative(node),
+
+			_ => base.VisitIdentifierName(node),
+		};
 	}
 
-	public override SyntaxNode VisitMemberAccessExpression(MemberAccessExpressionSyntax node) {
-		if (node.Name is IdentifierNameSyntax name && Refactor(node, name) is MemberAccessExpressionSyntax repl) {
-			return repl;
-		}
-
-		return base.VisitMemberAccessExpression(node);
-	}
-
-	private SyntaxNode Refactor(SyntaxNode expr, IdentifierNameSyntax name) {
-		if (!IsCompileError(expr))
-			return null;
+	private IdentifierNameSyntax RefactorSpeculative(IdentifierNameSyntax nameSyntax) {
+		var nameToken = nameSyntax.Identifier;
 
 		foreach (var (type, from, to, isStatic) in fieldRenames) {
-			if (from != name.Identifier.Text) continue;
+			if (from != nameToken.Text)
+				continue;
 
-			var repl = expr.ReplaceToken(name.Identifier, name.Identifier.WithText(to));
-			var speculate = model.GetSpeculativeSymbolInfo(name.SpanStart, repl, SpeculativeBindingOption.BindAsExpression);
+			var repl = nameSyntax.WithIdentifier(nameToken.WithText(to));
+			var speculate = model.GetSpeculativeSymbolInfo(nameSyntax.SpanStart, repl, SpeculativeBindingOption.BindAsExpression);
 			if (speculate.Symbol?.ContainingType?.ToString() == type)
 				return repl;
 		}
 
-		return null;
+		return nameSyntax;
+	}
+
+	private IdentifierNameSyntax Refactor(IdentifierNameSyntax nameSyntax, ITypeSymbol instType) {
+		if (instType == null)
+			return nameSyntax;
+
+		var nameToken = nameSyntax.Identifier;
+
+		foreach (var (type, from, to, isStatic) in fieldRenames) {
+			if (from != nameToken.Text || !instType.InheritsFrom(type))
+				continue;
+
+			return nameSyntax.WithIdentifier(nameToken.WithText(to));
+		}
+
+		return nameSyntax;
 	}
 }
 

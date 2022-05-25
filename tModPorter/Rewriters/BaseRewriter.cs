@@ -1,6 +1,5 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Operations;
 
 namespace tModPorter.Rewriters;
 
@@ -13,6 +12,4 @@ public abstract class BaseRewriter : CSharpSyntaxRewriter
 	}
 
 	public override SyntaxToken VisitToken(SyntaxToken token) => token;
-
-	protected bool IsCompileError(SyntaxNode node) => model.GetOperation(node) is IInvalidOperation;
 }

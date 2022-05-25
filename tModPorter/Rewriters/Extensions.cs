@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using System.Linq;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace tModPorter.Rewriters;
@@ -12,5 +13,10 @@ public static class Extensions
 		node.WithLeadingTrivia(other.LeadingTrivia).WithTrailingTrivia(other.TrailingTrivia);
 
 	public static SyntaxToken WithText(this SyntaxToken token, string text) => Identifier(text).WithTriviaFrom(token);
+
+	public static bool InheritsFrom(this ITypeSymbol type, string fromTypeName) =>
+		type.ToString() == fromTypeName ||
+		type.BaseType != null && InheritsFrom(type.BaseType, fromTypeName) ||
+		type.Interfaces.Any(i => InheritsFrom(i, fromTypeName));
 }
 
