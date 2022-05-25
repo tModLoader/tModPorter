@@ -1,7 +1,8 @@
 using Terraria.ModLoader; 
 
-public class TooltipLineFields {
-	void A() {
+public class TooltipLineTests
+{
+	void Method() {
 		TooltipLine line = new TooltipLine(null, "", "");
 		line.Text = "";
 		line.IsModifier = true;

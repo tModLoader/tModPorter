@@ -8,9 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Locator;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.MSBuild;
-using tModPorter.Rewriters;
 using UtfUnknown;
 using static System.Console;
 
@@ -20,39 +18,35 @@ public class tModPorter {
 	private int _totalDocuments;
 	private int _processedDocuments;
 
-	public async Task<Result> ProcessProject(string projectPath, int maxThreads = 2, IProgress<double>? progressReporter = null) {
-		try {
-			MSBuildLocator.RegisterDefaults();
+	public async Task ProcessProject(string projectPath, int? maxThreads = null, IProgress<double>? progressReporter = null) {
+		MSBuildLocator.RegisterDefaults();
 
-			using MSBuildWorkspace workspace = MSBuildWorkspace.Create();
+		using MSBuildWorkspace workspace = MSBuildWorkspace.Create();
+		workspace.WorkspaceFailed += (o, e) => {
+			if (e.Diagnostic.Kind == WorkspaceDiagnosticKind.Failure)
+				throw new Exception(e.Diagnostic.ToString());
 
-			// Print message for WorkspaceFailed event to help diagnosing project load failures.
-			workspace.WorkspaceFailed += (o, e) => {
-				Error.WriteLine(e.Diagnostic.ToString());
-			};
+			Error.WriteLine(e.Diagnostic.ToString());
+		};
 
-			WriteLine($"Loading project: {projectPath}");
-			// Attach progress reporter so we print projects as they are loaded.
-			Project project = await workspace.OpenProjectAsync(projectPath, new ConsoleProgressReporter());
-			_totalDocuments = project.Documents.Count();
+		WriteLine($"Loading project: {projectPath}");
+		// Attach progress reporter so we print projects as they are loaded.
+		Project project = await workspace.OpenProjectAsync(projectPath, new ConsoleProgressReporter());
 
-			int numChunks = Math.Min(maxThreads, _totalDocuments);
-			int i = 0;
-			IEnumerable<IEnumerable<Document>> chunks =
-				from document in project.Documents
-				group document by i++ % numChunks
-				into part
-				select part.AsEnumerable();
+		WriteLine();
+		_totalDocuments = project.Documents.Count();
 
-			List<Task> tasks = chunks.Select(chunk => Task.Run(() => ProcessChunk(chunk, progressReporter))).ToList();
+		int numChunks = Math.Min(maxThreads ?? Environment.TickCount, _totalDocuments);
+		int i = 0;
+		IEnumerable<IEnumerable<Document>> chunks =
+			from document in project.Documents
+			group document by i++ % numChunks
+			into part
+			select part.AsEnumerable();
 
-			await Task.WhenAll(tasks);
+		List<Task> tasks = chunks.Select(chunk => Task.Run(() => ProcessChunk(chunk, progressReporter))).ToList();
 
-			return new Result(true, null);
-		}
-		catch (Exception e) {
-			return new Result(false, e);
-		}
+		await Task.WhenAll(tasks);
 	}
 
 	private double UpdateProgress() {
@@ -65,37 +59,51 @@ public class tModPorter {
 			await ProcessFile(document, progress);
 	}
 
-	private async Task ProcessFile(Document document, IProgress<double>? progress) {
-		SyntaxTree root = await document.GetSyntaxTreeAsync() ??
-						  throw new Exception("No syntax root - " + document.FilePath);
-
-		SyntaxNode rootNode = await root.GetRootAsync();
-
-		MainRewriter rewriter = new(document, await document.GetSemanticModelAsync());
-		// Visit all the nodes to know what to change
-		rewriter.Visit(rootNode);
-		// Modify all nodes
-		SyntaxNode result = rewriter.RewriteNodes(rootNode);
-		if (result is not CompilationUnitSyntax unitSyntax) {
-			throw new InvalidOperationException($"Rewritten node was not of type {nameof(CompilationUnitSyntax)}, source node's type is {rootNode.GetType()}");
-		}
-		result = rewriter.AddUsingDirectives(unitSyntax);
-
-		if (!result.IsEquivalentTo(rootNode) && document.FilePath != null) {
-			Encoding encoding;
-			await using (Stream fs = new FileStream(document.FilePath, FileMode.Open, FileAccess.Read)) {
-				DetectionResult detectionResult = CharsetDetector.DetectFromStream(fs);
-				encoding = detectionResult.Detected.Encoding;
-				if (detectionResult.Detected.Confidence < .95f)
-					WriteLine($"Less than 95% confidence about the file encoding of: {document.FilePath}");
-			}
-
-			await File.WriteAllTextAsync(document.FilePath, result.ToFullString(), encoding);
+	private async Task ProcessFile(Document doc, IProgress<double>? progress) {
+		if (await Rewrite(doc) is Document newDoc) {
+			await Update(newDoc);
 		}
 
 		progress?.Report(UpdateProgress());
 	}
-	
+
+	private static async Task Update(Document doc) {
+		var path = doc.FilePath ?? throw new NullReferenceException("No path? " + doc?.Name);
+
+		Encoding encoding;
+		using (Stream fs = new FileStream(path, FileMode.Open, FileAccess.Read)) {
+			DetectionResult detectionResult = CharsetDetector.DetectFromStream(fs);
+			encoding = detectionResult.Detected.Encoding;
+			if (detectionResult.Detected.Confidence < .95f)
+				WriteLine($"\rLess than 95% confidence about the file encoding of: {doc.FilePath}");
+		}
+
+		int i = 2;
+		string backupPath = $"{path}.bak";
+		while (File.Exists(backupPath)) {
+			backupPath = $"{path}.bak{i++}";
+		}
+		File.Move(path, backupPath);
+
+		await File.WriteAllTextAsync(path, (await doc.GetTextAsync()).ToString(), encoding);
+		WriteLine("\rUpdated: " + doc.Name);
+	}
+
+	public static async Task<Document?> Rewrite(Document doc) {
+		bool changed = false;
+		while (true) {
+			var root = await doc.GetSyntaxRootAsync() ?? throw new Exception("No syntax root: " + doc.FilePath);
+			var rewriter = Config.Create(await doc.GetSemanticModelAsync() ?? throw new Exception("No semantic model: " + doc.FilePath));
+			var node = rewriter.Visit(root);
+			if (node == root)
+				break;
+
+			changed = true;
+			doc = doc.WithSyntaxRoot(node);
+		}
+		return changed ? doc : null;
+	}
+
 	private class ConsoleProgressReporter : IProgress<ProjectLoadProgress> {
 		public void Report(ProjectLoadProgress loadProgress) {
 			string? projectDisplay = Path.GetFileName(loadProgress.FilePath);

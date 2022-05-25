@@ -2,7 +2,7 @@
 using Terraria.ModLoader; 
 
 public class TileTest {
-	void A() {
+	void UseTileMembers() {
 		Tile tile = new Tile();
 
 		if (tile.active()) {
@@ -16,5 +16,7 @@ public class TileTest {
 			tile.wallFrameX = 0;
 			tile.wallFrameY = 0;
 		}
+
+		Main.tile[0, 0].type = 0;
 	}
 }

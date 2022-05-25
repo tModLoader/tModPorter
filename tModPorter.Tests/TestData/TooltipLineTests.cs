@@ -1,7 +1,8 @@
 using Terraria.ModLoader; 
 
-public class TooltipLineFields {
-	void A() {
+public class TooltipLineTests
+{
+	void Method() {
 		TooltipLine line = new TooltipLine(null, "", "");
 		line.text = "";
 		line.isModifier = true;
@@ -9,6 +10,7 @@ public class TooltipLineFields {
 		line.overrideColor = null;
 
 		line = new TooltipLine(null, "", "") {
+			Text = "",
 			text = "",
 			isModifier = true,
 			isModifierBad = false,

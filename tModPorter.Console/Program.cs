@@ -7,22 +7,18 @@ internal class Program {
 		string projectPath = GetProjectPath(args);
 
 		ProgressBar bar = new();
-
 		tModPorter porter = new();
-		Result result = await porter.ProcessProject(projectPath, 4, bar);
 
-		bar.Finish();
-		WriteLine();
-
-		if (result.Success) {
+		try {
+			await porter.ProcessProject(projectPath, progressReporter: bar);
+			bar.Finish();
 			WriteLine("Successfully ported the project");
-
-			ReadKey();
-			return;
 		}
-		
-		WriteLine("Failed to port the project with the following error:");
-		WriteLine(result.ErrorCause);
+		catch (Exception ex) {
+			bar.Finish();
+			WriteLine("Failed to port the project with the following error:");
+			WriteLine(ex);
+		}
 
 		ReadKey();
 	}

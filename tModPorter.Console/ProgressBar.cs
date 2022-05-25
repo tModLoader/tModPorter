@@ -46,6 +46,7 @@ public class ProgressBar : IDisposable, IProgress<double> {
 
 	public void Finish() {
 		UpdateProgressText(CreateProgressText());
+		SysConsole.WriteLine();
 		Dispose();
 	}
 

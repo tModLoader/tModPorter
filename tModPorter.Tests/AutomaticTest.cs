@@ -27,19 +27,16 @@ public class AutomaticTest {
 
 	[TestCaseSource(nameof(GetTestCases))]
 	public async Task RewriteCode(Document doc) {
-		SyntaxTree tree = await doc.GetSyntaxTreeAsync() ?? throw new NullReferenceException("Node has no syntax tree");
-		SemanticModel model = _compilation!.GetSemanticModel(tree);
-		SyntaxNode rootNode = tree.GetRoot();
+		doc = await tModPorter.Rewrite(doc) ?? throw new Exception("No content change!");
 
-		CompilationUnitSyntax result = RewriteCodeOnce(doc, model, rootNode);
+		var result = (await doc.GetTextAsync()).ToString();
+		File.WriteAllText(Path.ChangeExtension(doc.FilePath!, ".Out.cs"), result);
 
-		string fixedFilePath = Path.ChangeExtension(tree.FilePath, ".Fix.cs");
-
+		string fixedFilePath = Path.ChangeExtension(doc.FilePath!, ".Fix.cs");
 		Assert.True(File.Exists(fixedFilePath), $"File '{fixedFilePath}' doesn't exist.");
-		string fixedContent = File.ReadAllText(fixedFilePath);
 
-		//File.WriteAllText(Path.ChangeExtension(tree.FilePath, ".Out.cs"), result.ToFullString());
-		FileAssert.Equal(fixedContent, result.ToFullString());
+		string fixedContent = File.ReadAllText(fixedFilePath);
+		FileAssert.Equal(fixedContent, result);
 	}
 
 	[Test]
@@ -61,7 +58,7 @@ public class AutomaticTest {
 			Assert.Fail("Compilation Failed");
 		}
 	}
-	
+	/*
 	[TestCaseSource(nameof(GetTestCases))]
 	public async Task RewriteCodeTwice(Document doc) {
 		SyntaxTree tree = await doc.GetSyntaxTreeAsync() ?? throw new NullReferenceException("Node has no syntax tree");
@@ -95,12 +92,18 @@ public class AutomaticTest {
 
 		Assert.NotNull(result);
 		return rewriter.AddUsingDirectives(result);
-	}
+	}*/
 
 	private static async Task LoadProject(bool force = false) {
 		if (_project is not null && _compilation is not null) return;
 
 		using MSBuildWorkspace workspace = MSBuildWorkspace.Create();
+		workspace.WorkspaceFailed += (o, e) => {
+			if (e.Diagnostic.Kind == WorkspaceDiagnosticKind.Failure)
+				throw new Exception(e.Diagnostic.ToString());
+
+			Console.Error.WriteLine(e.Diagnostic.ToString());
+		};
 
 		if (!File.Exists(TestModPath)) {
 			throw new FileNotFoundException("TestData.csproj not found.");

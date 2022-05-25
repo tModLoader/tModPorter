@@ -12,7 +12,7 @@ public static class FileAssert
 		var patches = new PatienceDiffer().MakePatches(aLines, eLines);
 		if (!patches.Any()) return;
 
-		Assert.Fail("Expected (+) vs Actual (-) patches\r\n" +
+		Assert.Fail("Actual (-) vs Expected (+) patches\r\n" +
 			string.Join("\r\n\r\n", patches));
 	}
 }
