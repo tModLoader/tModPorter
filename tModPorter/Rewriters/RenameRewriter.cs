@@ -8,9 +8,11 @@ namespace tModPorter.Rewriters;
 public class RenameRewriter : BaseRewriter
 {
 	private static List<(string type, string from, string to)> fieldRenames = new();
+	private static List<(string from, string to)> typeRenames = new();
 
 	public static void RenameInstanceField(string type, string from, string to) => fieldRenames.Add((type, from, to));
 	public static void RenameStaticField(string type, string from, string to) => fieldRenames.Add((type, from, to));
+	public static void RenameType(string from, string to) => typeRenames.Add((from, to));
 
 	public override SyntaxNode VisitIdentifierName(IdentifierNameSyntax node) {
 		return node.Parent switch {
@@ -22,6 +24,9 @@ public class RenameRewriter : BaseRewriter
 
 			_ when model.GetOperation(node) is IInvalidOperation =>
 				RefactorSpeculative(node),
+
+			_ when model.GetSymbolInfo(node).Symbol == null =>
+				RefactorType(node),
 
 			_ => base.VisitIdentifierName(node),
 		};
@@ -54,6 +59,26 @@ public class RenameRewriter : BaseRewriter
 				continue;
 
 			return nameSyntax.WithIdentifier(nameToken.WithText(to));
+		}
+
+		return nameSyntax;
+	}
+
+	private SyntaxNode RefactorType(IdentifierNameSyntax nameSyntax) {
+		var nameToken = nameSyntax.Identifier;
+
+		foreach (var (from, to) in typeRenames) {
+			if (!from.EndsWith(nameToken.Text))
+				continue;
+
+			var qualifier = from[..^nameToken.Text.Length];
+			if (qualifier[^1] != '.' || !to.StartsWith(qualifier))
+				continue;
+
+			var repl = nameSyntax.WithIdentifier(nameToken.WithText(to[qualifier.Length..]));
+			var speculate = model.GetSpeculativeSymbolInfo(nameSyntax.SpanStart, repl, SpeculativeBindingOption.BindAsTypeOrNamespace);
+			if (speculate.Symbol?.ToString() == to)
+				return repl;
 		}
 
 		return nameSyntax;

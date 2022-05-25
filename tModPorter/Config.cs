@@ -6,7 +6,7 @@ namespace tModPorter;
 public static class Config
 {
 	public static List<BaseRewriter> CreateRewriters() => new() {
-		new RenameRewriter()
+		new RenameRewriter(),
 	};
 
 	static Config() {
@@ -21,6 +21,8 @@ public static class Config
 		RenameRewriter.RenameInstanceField("Terraria.NPC",				from: "modNPC",			to: "ModNPC");
 		RenameRewriter.RenameInstanceField("Terraria.Projectile",		from: "modProjectile",	to: "ModProjectile");
 		RenameRewriter.RenameInstanceField("Terraria.Mount.MountData",	from: "modMountData",	to: "ModMount");
+
+		RenameRewriter.RenameType(from: "Terraria.ModLoader.ModMountData", to: "Terraria.ModLoader.ModMount");
 
 		RenameRewriter.RenameInstanceField("Terraria.ModLoader.TooltipLine",	from: "text",			to: "Text");
 		RenameRewriter.RenameInstanceField("Terraria.ModLoader.TooltipLine",	from: "isModifier",		to: "IsModifier");
@@ -39,8 +41,6 @@ public static class Config
 		RenameRewriter.RenameStaticField("Terraria.ID.ItemUseStyleID", from: "SwingThrow",	to: "Swing");
 		RenameRewriter.RenameStaticField("Terraria.ID.ItemUseStyleID", from: "EatingUsing", to: "EatFood");
 		RenameRewriter.RenameStaticField("Terraria.ID.ItemUseStyleID", from: "Stabbing",	to: "Thrust");
-
-		//RenameRewriter.RenameType(from: "Terraria.ModLoader.ModMountData", to: "Terraria.ModLoader.ModMount");
 
 
 	}
