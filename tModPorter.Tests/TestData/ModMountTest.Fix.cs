@@ -9,4 +9,6 @@ public class ModMountTest : ModMount
 	}
 
 	public static Mount.MountData TypeAndMemberTest(ModMount modMount) => modMount.MountData;
+
+	public override void SetStaticDefaults() { /* Empty */ }
 }
