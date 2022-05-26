@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using tModPorter.Rewriters;
+using static tModPorter.Rewriters.RenameRewriter;
 
 namespace tModPorter;
 
@@ -10,52 +11,52 @@ public static class Config
 	};
 
 	static Config() {
-		RenameRewriter.RenameInstanceField("Terraria.ModLoader.ModType",		from: "mod",			to: "Mod");
-		RenameRewriter.RenameInstanceField("Terraria.ModLoader.ModItem",		from: "item",			to: "Item");
-		RenameRewriter.RenameInstanceField("Terraria.ModLoader.ModNPC",			from: "npc",			to: "NPC");
-		RenameRewriter.RenameInstanceField("Terraria.ModLoader.ModPlayer",		from: "player",			to: "Player");
-		RenameRewriter.RenameInstanceField("Terraria.ModLoader.ModProjectile",	from: "projectile",		to: "Projectile");
-		RenameRewriter.RenameInstanceField("Terraria.ModLoader.ModMount",		from: "mountData",		to: "MountData");
+		RenameInstanceField("Terraria.ModLoader.ModType",		from: "mod",			to: "Mod");
+		RenameInstanceField("Terraria.ModLoader.ModItem",		from: "item",			to: "Item");
+		RenameInstanceField("Terraria.ModLoader.ModNPC",			from: "npc",			to: "NPC");
+		RenameInstanceField("Terraria.ModLoader.ModPlayer",		from: "player",			to: "Player");
+		RenameInstanceField("Terraria.ModLoader.ModProjectile",	from: "projectile",		to: "Projectile");
+		RenameInstanceField("Terraria.ModLoader.ModMount",		from: "mountData",		to: "MountData");
 
-		RenameRewriter.RenameInstanceField("Terraria.Item",				from: "modItem",		to: "ModItem");
-		RenameRewriter.RenameInstanceField("Terraria.NPC",				from: "modNPC",			to: "ModNPC");
-		RenameRewriter.RenameInstanceField("Terraria.Projectile",		from: "modProjectile",	to: "ModProjectile");
-		RenameRewriter.RenameInstanceField("Terraria.Mount.MountData",	from: "modMountData",	to: "ModMount");
+		RenameInstanceField("Terraria.Item",				from: "modItem",		to: "ModItem");
+		RenameInstanceField("Terraria.NPC",				from: "modNPC",			to: "ModNPC");
+		RenameInstanceField("Terraria.Projectile",		from: "modProjectile",	to: "ModProjectile");
+		RenameInstanceField("Terraria.Mount.MountData",	from: "modMountData",	to: "ModMount");
 
-		RenameRewriter.RenameType(from: "Terraria.ModLoader.ModMountData", to: "Terraria.ModLoader.ModMount");
+		RenameType(from: "Terraria.ModLoader.ModMountData", to: "Terraria.ModLoader.ModMount");
 
-		RenameRewriter.RenameInstanceField("Terraria.ModLoader.TooltipLine",	from: "text",			to: "Text");
-		RenameRewriter.RenameInstanceField("Terraria.ModLoader.TooltipLine",	from: "isModifier",		to: "IsModifier");
-		RenameRewriter.RenameInstanceField("Terraria.ModLoader.TooltipLine",	from: "isModifierBad",	to: "IsModifierBad");
-		RenameRewriter.RenameInstanceField("Terraria.ModLoader.TooltipLine",	from: "overrideColor",	to: "OverrideColor");
+		RenameInstanceField("Terraria.ModLoader.TooltipLine",	from: "text",			to: "Text");
+		RenameInstanceField("Terraria.ModLoader.TooltipLine",	from: "isModifier",		to: "IsModifier");
+		RenameInstanceField("Terraria.ModLoader.TooltipLine",	from: "isModifierBad",	to: "IsModifierBad");
+		RenameInstanceField("Terraria.ModLoader.TooltipLine",	from: "overrideColor",	to: "OverrideColor");
 
-		RenameRewriter.RenameInstanceField("Terraria.Tile", from: "frameX",		to: "TileFrameX");
-		RenameRewriter.RenameInstanceField("Terraria.Tile", from: "frameY",		to: "TileFrameY");
-		RenameRewriter.RenameInstanceField("Terraria.Tile", from: "type",		to: "TileType");
-		RenameRewriter.RenameInstanceField("Terraria.Tile", from: "wall",		to: "WallType");
-		RenameRewriter.RenameInstanceField("Terraria.Tile", from: "wallFrameX",	to: "WallFrameX");
-		RenameRewriter.RenameInstanceField("Terraria.Tile", from: "wallFrameY",	to: "WallFrameY");
+		RenameInstanceField("Terraria.Tile", from: "frameX",		to: "TileFrameX");
+		RenameInstanceField("Terraria.Tile", from: "frameY",		to: "TileFrameY");
+		RenameInstanceField("Terraria.Tile", from: "type",		to: "TileType");
+		RenameInstanceField("Terraria.Tile", from: "wall",		to: "WallType");
+		RenameInstanceField("Terraria.Tile", from: "wallFrameX",	to: "WallFrameX");
+		RenameInstanceField("Terraria.Tile", from: "wallFrameY",	to: "WallFrameY");
 
-		RenameRewriter.RenameStaticField("Terraria.ID.ItemUseStyleID", from: "HoldingUp",	to: "HoldUp");
-		RenameRewriter.RenameStaticField("Terraria.ID.ItemUseStyleID", from: "HoldingOut",	to: "Shoot");
-		RenameRewriter.RenameStaticField("Terraria.ID.ItemUseStyleID", from: "SwingThrow",	to: "Swing");
-		RenameRewriter.RenameStaticField("Terraria.ID.ItemUseStyleID", from: "EatingUsing", to: "EatFood");
-		RenameRewriter.RenameStaticField("Terraria.ID.ItemUseStyleID", from: "Stabbing",	to: "Thrust");
+		RenameStaticField("Terraria.ID.ItemUseStyleID", from: "HoldingUp",	to: "HoldUp");
+		RenameStaticField("Terraria.ID.ItemUseStyleID", from: "HoldingOut",	to: "Shoot");
+		RenameStaticField("Terraria.ID.ItemUseStyleID", from: "SwingThrow",	to: "Swing");
+		RenameStaticField("Terraria.ID.ItemUseStyleID", from: "EatingUsing", to: "EatFood");
+		RenameStaticField("Terraria.ID.ItemUseStyleID", from: "Stabbing",	to: "Thrust");
 
-		RenameRewriter.RenameMethod("Terraria.ModLoader.ModItem",		from: "NetRecieve",		to: "NetReceive");
-		RenameRewriter.RenameMethod("Terraria.ModLoader.GlobalItem",	from: "NewPreReforge",	to: "PreReforge");
-		RenameRewriter.RenameMethod("Terraria.ModLoader.ModTile",		from: "NewRightClick",	to: "RightClick");
-		RenameRewriter.RenameMethod("Terraria.ModLoader.ModTile",		from: "Dangersense",	to: "IsTileDangerous");
-		RenameRewriter.RenameMethod("Terraria.ModLoader.GlobalTile",	from: "Dangersense",	to: "IsTileDangerous");
+		RenameMethod("Terraria.ModLoader.ModItem",		from: "NetRecieve",		to: "NetReceive");
+		RenameMethod("Terraria.ModLoader.GlobalItem",	from: "NewPreReforge",	to: "PreReforge");
+		RenameMethod("Terraria.ModLoader.ModTile",		from: "NewRightClick",	to: "RightClick");
+		RenameMethod("Terraria.ModLoader.ModTile",		from: "Dangersense",	to: "IsTileDangerous");
+		RenameMethod("Terraria.ModLoader.GlobalTile",	from: "Dangersense",	to: "IsTileDangerous");
 
-		RenameRewriter.RenameMethod("Terraria.ModLoader.GlobalTile",	from: "SetDefaults", to: "SetStaticDefaults");
-		RenameRewriter.RenameMethod("Terraria.ModLoader.GlobalWall",	from: "SetDefaults", to: "SetStaticDefaults");
-		RenameRewriter.RenameMethod("Terraria.ModLoader.InfoDisplay",	from: "SetDefaults", to: "SetStaticDefaults");
-		RenameRewriter.RenameMethod("Terraria.ModLoader.ModTile",		from: "SetDefaults", to: "SetStaticDefaults");
-		RenameRewriter.RenameMethod("Terraria.ModLoader.ModWall",		from: "SetDefaults", to: "SetStaticDefaults");
-		RenameRewriter.RenameMethod("Terraria.ModLoader.ModBuff",		from: "SetDefaults", to: "SetStaticDefaults");
-		RenameRewriter.RenameMethod("Terraria.ModLoader.ModDust",		from: "SetDefaults", to: "SetStaticDefaults");
-		RenameRewriter.RenameMethod("Terraria.ModLoader.ModMount",		from: "SetDefaults", to: "SetStaticDefaults");
-		RenameRewriter.RenameMethod("Terraria.ModLoader.ModPrefix",		from: "SetDefaults", to: "SetStaticDefaults");
+		RenameMethod("Terraria.ModLoader.GlobalTile",	from: "SetDefaults", to: "SetStaticDefaults");
+		RenameMethod("Terraria.ModLoader.GlobalWall",	from: "SetDefaults", to: "SetStaticDefaults");
+		RenameMethod("Terraria.ModLoader.InfoDisplay",	from: "SetDefaults", to: "SetStaticDefaults");
+		RenameMethod("Terraria.ModLoader.ModTile",		from: "SetDefaults", to: "SetStaticDefaults");
+		RenameMethod("Terraria.ModLoader.ModWall",		from: "SetDefaults", to: "SetStaticDefaults");
+		RenameMethod("Terraria.ModLoader.ModBuff",		from: "SetDefaults", to: "SetStaticDefaults");
+		RenameMethod("Terraria.ModLoader.ModDust",		from: "SetDefaults", to: "SetStaticDefaults");
+		RenameMethod("Terraria.ModLoader.ModMount",		from: "SetDefaults", to: "SetStaticDefaults");
+		RenameMethod("Terraria.ModLoader.ModPrefix",	from: "SetDefaults", to: "SetStaticDefaults");
 	}
 }
