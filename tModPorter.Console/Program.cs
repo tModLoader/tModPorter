@@ -6,23 +6,20 @@ internal class Program {
 	public static async Task Main(string[] args) {
 		string projectPath = GetProjectPath(args);
 
-		ProgressBar bar = new();
 		tModPorter porter = new();
 
 		try {
-			await porter.ProcessProject(projectPath, progressReporter: bar);
-			bar.Finish();
-			WriteLine("Successfully ported the project");
+			await porter.ProcessProject(projectPath, UpdateProgress);
 		}
 		catch (Exception ex) {
-			bar.Finish();
-			WriteLine("Failed to port the project with the following error:");
+			WriteLine();
+			WriteLine();
 			WriteLine(ex);
 		}
 
 		ReadKey();
 	}
-	
+
 	private static string GetProjectPath(string[] args) {
 		// Check if the args have a valid file path
 		if (args.Length > 0 && File.Exists(Path.ChangeExtension(args[0], ".csproj")))
@@ -48,5 +45,20 @@ internal class Program {
 
 		// Return the path passed in by the user
 		return filePath;
+	}
+
+	private static void UpdateProgress(ProgressUpdate update) {
+		const int ConsoleWidth = 60;
+		const int BarWidth = 10;
+
+		switch (update) {
+			case ProgressUpdate.Progress(int Pass, int CurrentFile, int FileCount):
+				string bar = new string('#', CurrentFile* BarWidth / FileCount).PadRight(BarWidth, '-');
+				Write($"\r[{bar}] Pass {Pass}, {CurrentFile}/{FileCount}");
+				break;
+			default:
+				WriteLine($"\r{update,-ConsoleWidth}");
+				break;
+		}
 	}
 }

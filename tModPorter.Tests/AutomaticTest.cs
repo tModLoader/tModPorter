@@ -2,23 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Locator;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.MSBuild;
-using tModPorter.Rewriters;
 using NUnit.Framework;
 
 namespace tModPorter.Tests;
 
-// TODO: Make test using tModPorter class
 public class AutomaticTest {
 	public static string TestModPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "../../../TestData/TestData.csproj"));
 	private static VisualStudioInstance instance = MSBuildLocator.RegisterDefaults();
-
-	private static Compilation? _compilation;
-	private static Project? _project;
 
 	[OneTimeSetUp]
 	public async Task Setup() {
@@ -27,16 +22,11 @@ public class AutomaticTest {
 
 	[TestCaseSource(nameof(GetTestCases))]
 	public async Task RewriteCode(Document doc) {
-		doc = await tModPorter.Rewrite(doc) ?? throw new Exception("No content change!");
+		doc = await tModPorter.Rewrite(doc);
+		if (doc.Project == _project)
+			Assert.Fail("No content change!");
 
-		var result = (await doc.GetTextAsync()).ToString();
-		File.WriteAllText(Path.ChangeExtension(doc.FilePath!, ".Out.cs"), result);
-
-		string fixedFilePath = Path.ChangeExtension(doc.FilePath!, ".Fix.cs");
-		Assert.True(File.Exists(fixedFilePath), $"File '{fixedFilePath}' doesn't exist.");
-
-		string fixedContent = File.ReadAllText(fixedFilePath);
-		FileAssert.Equal(fixedContent, result);
+		await AssertFixed(doc);
 	}
 
 	[Test]
@@ -58,44 +48,56 @@ public class AutomaticTest {
 			Assert.Fail("Compilation Failed");
 		}
 	}
-	/*
-	[TestCaseSource(nameof(GetTestCases))]
-	public async Task RewriteCodeTwice(Document doc) {
-		SyntaxTree tree = await doc.GetSyntaxTreeAsync() ?? throw new NullReferenceException("Node has no syntax tree");
-		SemanticModel model = _compilation!.GetSemanticModel(tree);
-		SyntaxNode rootNode = await tree.GetRootAsync();
 
-		CompilationUnitSyntax result = RewriteCodeOnce(doc, model, rootNode);
-		
-		// Write the rewritten file to disk, so that we can then load it again with the .csproj
-		doc = doc.WithSyntaxRoot(result);
-		tree = await doc.GetSyntaxTreeAsync() ?? throw new NullReferenceException("Node has no syntax tree");
-		Compilation? newCompilation = await doc.Project.GetCompilationAsync();
-		Assert.NotNull(newCompilation);
-		model = newCompilation!.GetSemanticModel(tree);
-		rootNode = await tree.GetRootAsync();
+	[Test]
+	public async Task ProjectWideRefactor() {
+		int pass = 0;
+		var log = (ProgressUpdate update) => {
+			if (update is not ProgressUpdate.Progress progress) {
+				TestContext.Out.WriteLine(update);
+				return;
+			}
 
-		result = RewriteCodeOnce(doc, model, rootNode);
+			int p = pass;
+			if (progress.Pass > pass && Interlocked.CompareExchange(ref pass, progress.Pass, p) == p) {
+				pass = progress.Pass;
+				TestContext.Out.WriteLine("Pass " + pass);
+			}
+		};
 
-		string fixedFilePath = Path.ChangeExtension(tree.FilePath, ".Fix.cs");
+		var baseProject = await LoadProject();
+		var project = await new tModPorter(dryRun: true).Process(baseProject, log);
+		TestContext.Out.WriteLine("Complete. Comparing files...");
 
-		Assert.True(File.Exists(fixedFilePath), $"File '{fixedFilePath}' doesn't exist.");
-		string fixedContent = await File.ReadAllTextAsync(fixedFilePath);
+		var updatedDocs = project.GetChanges(baseProject).GetChangedDocuments().ToHashSet();
+		Assert.Multiple(async () => {
+			foreach (var doc in project.Documents) {
+				if (!doc.FilePath!.Replace('\\', '/').Contains("/ProjectWide/"))
+					continue;
 
-		FileAssert.Equal(fixedContent, result.ToFullString());
+				if (!updatedDocs.Contains(doc.Id))
+					Assert.Fail($"{doc.Name}: No content change!");
+
+				await AssertFixed(doc);
+				TestContext.Out.WriteLine("Success: " + doc.Name);
+			}
+		});
 	}
-	
-	private static CompilationUnitSyntax RewriteCodeOnce(Document document, SemanticModel model, SyntaxNode rootNode) {
-		MainRewriter rewriter = new(document, model);
-		rewriter.Visit(rootNode);
-		CompilationUnitSyntax? result = rewriter.RewriteNodes(rootNode) as CompilationUnitSyntax;
 
-		Assert.NotNull(result);
-		return rewriter.AddUsingDirectives(result);
-	}*/
+	private static async Task AssertFixed(Document doc) {
+		var result = (await doc.GetTextAsync()).ToString();
+		await File.WriteAllTextAsync(Path.ChangeExtension(doc.FilePath!, ".Out.cs"), result);
 
-	private static async Task LoadProject(bool force = false) {
-		if (_project is not null && _compilation is not null) return;
+		string fixedFilePath = Path.ChangeExtension(doc.FilePath!, ".Fix.cs");
+		Assert.True(File.Exists(fixedFilePath), $"File '{fixedFilePath}' doesn't exist.");
+
+		string fixedContent = await File.ReadAllTextAsync(fixedFilePath);
+		FileAssert.Equal(doc.Name, fixedContent, result);
+	}
+
+	private static Project? _project;
+	private static async Task<Project> LoadProject() {
+		if (_project is not null) return _project;
 
 		using MSBuildWorkspace workspace = MSBuildWorkspace.Create();
 		workspace.WorkspaceFailed += (o, e) => {
@@ -110,17 +112,15 @@ public class AutomaticTest {
 		}
 
 		_project = await workspace.OpenProjectAsync(TestModPath);
-		_compilation = await _project.GetCompilationAsync();
-		if (_compilation is null) throw new NullReferenceException(nameof(_compilation));
+		return _project;
 	}
 
 	public static IEnumerable<TestCaseData> GetTestCases() {
-		LoadProject().GetAwaiter().GetResult();
-		return _project!.Documents
+		return LoadProject().GetAwaiter().GetResult().Documents
 			.Where(d => FilterTestCasePath(d.FilePath!.Replace('\\', '/')))
 			.Select(d => new TestCaseData(d).SetArgDisplayNames(Path.GetFileName(d.FilePath)!))
 			.ToArray();
 	}
 
-	private static bool FilterTestCasePath(string path) => !path.Contains("/Common/") && !path.Contains("/obj/");
+	private static bool FilterTestCasePath(string path) => !path.Contains("/Common/") && !path.Contains("/ProjectWide/") && !path.Contains("/obj/");
 }

@@ -1,6 +1,5 @@
 #nullable enable
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -10,15 +9,26 @@ using Microsoft.Build.Locator;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.MSBuild;
 using UtfUnknown;
-using static System.Console;
+using static tModPorter.ProgressUpdate;
 
 namespace tModPorter;
 
-public class tModPorter {
-	private int _totalDocuments;
-	private int _processedDocuments;
+public class tModPorter
+{
+	private int documentCount;
+	private int pass = 1;
+	private int docsCompletedThisPass = 0;
 
-	public async Task ProcessProject(string projectPath, int? maxThreads = null, IProgress<double>? progressReporter = null) {
+	public bool DryRun { get; }
+
+	public tModPorter(bool dryRun = false) {
+		DryRun = dryRun;
+	}
+
+	public async Task ProcessProject(string projectPath, Action<ProgressUpdate>? updateProgress = null) {
+		updateProgress ??= _ => { };
+		var start = DateTime.Now;
+
 		MSBuildLocator.RegisterDefaults();
 
 		using MSBuildWorkspace workspace = MSBuildWorkspace.Create();
@@ -26,48 +36,56 @@ public class tModPorter {
 			if (e.Diagnostic.Kind == WorkspaceDiagnosticKind.Failure)
 				throw new Exception(e.Diagnostic.ToString());
 
-			Error.WriteLine(e.Diagnostic.ToString());
+			updateProgress(new Warning(e.Diagnostic.ToString()));
 		};
 
-		WriteLine($"Loading project: {projectPath}");
-		// Attach progress reporter so we print projects as they are loaded.
-		Project project = await workspace.OpenProjectAsync(projectPath, new ConsoleProgressReporter());
-
-		WriteLine();
-		_totalDocuments = project.Documents.Count();
-
-		int numChunks = Math.Min(maxThreads ?? Environment.TickCount, _totalDocuments);
-		int i = 0;
-		IEnumerable<IEnumerable<Document>> chunks =
-			from document in project.Documents
-			group document by i++ % numChunks
-			into part
-			select part.AsEnumerable();
-
-		List<Task> tasks = chunks.Select(chunk => Task.Run(() => ProcessChunk(chunk, progressReporter))).ToList();
-
-		await Task.WhenAll(tasks);
+		var project = await workspace.OpenProjectAsync(projectPath, new ProjectLoadProgressAdapter(updateProgress));
+		var updatedProject = await Process(project, updateProgress);
+		var changedDocs = updatedProject.GetChanges(project).GetChangedDocuments().Count();
+		updateProgress(new Complete(pass, changedDocs, documentCount, DateTime.Now - start));
 	}
 
-	private double UpdateProgress() {
-		int processedDocs = Interlocked.Add(ref _processedDocuments, 1);
-		return (double) processedDocs / _totalDocuments;
-	}
+	public async Task<Project> Process(Project project, Action<ProgressUpdate> updateProgress) {
+		documentCount = project.Documents.Count();
 
-	private async Task ProcessChunk(IEnumerable<Document> chunk, IProgress<double>? progress) {
-		foreach (Document document in chunk)
-			await ProcessFile(document, progress);
-	}
+		while (true) {
+			docsCompletedThisPass = 0;
+			updateProgress(new Progress(pass, docsCompletedThisPass, documentCount));
 
-	private async Task ProcessFile(Document doc, IProgress<double>? progress) {
-		if (await Rewrite(doc) is Document newDoc) {
-			await Update(newDoc);
+			var tasks = project.Documents.Select(doc => Task.Run(async () => await Process(doc, updateProgress))).ToArray();
+			var docs = await Task.WhenAll(tasks);
+			var changed = docs.Except(project.Documents).ToArray();
+			if (!changed.Any())
+				break;
+
+			var sln = project.Solution;
+			foreach (var doc in changed) {
+				sln = sln.WithDocumentSyntaxRoot(doc.Id, (await doc.GetSyntaxRootAsync())!, PreservationMode.PreserveIdentity);
+			}
+			project = sln.GetProject(project.Id)!;
+			pass++;
 		}
 
-		progress?.Report(UpdateProgress());
+		return project;
 	}
 
-	private static async Task Update(Document doc) {
+	private async Task<Document> Process(Document doc, Action<ProgressUpdate> updateProgress) {
+		var newDoc = await Rewrite(doc);
+		if (newDoc != doc) {
+			await Update(newDoc, updateProgress);
+			updateProgress(new FileUpdated(doc.Name));
+		}
+
+		Interlocked.Increment(ref docsCompletedThisPass);
+		updateProgress(new Progress(pass, docsCompletedThisPass, documentCount));
+
+		return newDoc;
+	}
+
+	protected virtual async Task Update(Document doc, Action<ProgressUpdate> updateProgress) {
+		if (DryRun)
+			return;
+
 		var path = doc.FilePath ?? throw new NullReferenceException("No path? " + doc?.Name);
 
 		Encoding encoding;
@@ -75,7 +93,7 @@ public class tModPorter {
 			DetectionResult detectionResult = CharsetDetector.DetectFromStream(fs);
 			encoding = detectionResult.Detected.Encoding;
 			if (detectionResult.Detected.Confidence < .95f)
-				WriteLine($"\rLess than 95% confidence about the file encoding of: {doc.FilePath}");
+				updateProgress(new Warning($"Less than 95% confidence about the file encoding of: {doc.FilePath}"));
 		}
 
 		int i = 2;
@@ -86,31 +104,32 @@ public class tModPorter {
 		File.Move(path, backupPath);
 
 		await File.WriteAllTextAsync(path, (await doc.GetTextAsync()).ToString(), encoding);
-		WriteLine("\rUpdated: " + doc.Name);
 	}
 
-	public static async Task<Document?> Rewrite(Document doc) {
-		var originalDoc = doc;
-		while (true) {
-			var docBeforePass = doc;
-
+	public static async Task<Document> Rewrite(Document doc) {
+		Document prevDoc;
+		do {
+			prevDoc = doc;
 			foreach (var rewriter in Config.CreateRewriters()) {
 				doc = await rewriter.Rewrite(doc);
 			}
+		} while (doc != prevDoc);
 
-			if (doc == docBeforePass)
-				break;
-		}
-
-		return doc == originalDoc ? null : doc;
+		return doc;
 	}
 
-	private class ConsoleProgressReporter : IProgress<ProjectLoadProgress> {
-		public void Report(ProjectLoadProgress loadProgress) {
-			string? projectDisplay = Path.GetFileName(loadProgress.FilePath);
-			if (loadProgress.TargetFramework != null) projectDisplay += $" ({loadProgress.TargetFramework})";
+	private class ProjectLoadProgressAdapter : IProgress<ProjectLoadProgress> {
+		private Action<ProgressUpdate> updateProgress;
 
-			WriteLine($"{loadProgress.Operation,-15} {loadProgress.ElapsedTime,-15:m\\:ss\\.fffffff} {projectDisplay}");
+		public ProjectLoadProgressAdapter(Action<ProgressUpdate> updateProgress) {
+			this.updateProgress = updateProgress;
+		}
+
+		public void Report(ProjectLoadProgress loadProgress) {
+			string? pathAndFramework = Path.GetFileName(loadProgress.FilePath);
+			if (loadProgress.TargetFramework != null) pathAndFramework += $" ({loadProgress.TargetFramework})";
+
+			updateProgress(new ProjectLoading(loadProgress.Operation.ToString(), loadProgress.ElapsedTime, pathAndFramework));
 		}
 	}
 }
