@@ -42,6 +42,20 @@ public static class Config
 		RenameRewriter.RenameStaticField("Terraria.ID.ItemUseStyleID", from: "EatingUsing", to: "EatFood");
 		RenameRewriter.RenameStaticField("Terraria.ID.ItemUseStyleID", from: "Stabbing",	to: "Thrust");
 
+		RenameRewriter.RenameMethod("Terraria.ModLoader.ModItem",		from: "NetRecieve",		to: "NetReceive");
+		RenameRewriter.RenameMethod("Terraria.ModLoader.GlobalItem",	from: "NewPreReforge",	to: "PreReforge");
+		RenameRewriter.RenameMethod("Terraria.ModLoader.ModTile",		from: "NewRightClick",	to: "RightClick");
+		RenameRewriter.RenameMethod("Terraria.ModLoader.ModTile",		from: "Dangersense",	to: "IsTileDangerous");
+		RenameRewriter.RenameMethod("Terraria.ModLoader.GlobalTile",	from: "Dangersense",	to: "IsTileDangerous");
 
+		RenameRewriter.RenameMethod("Terraria.ModLoader.GlobalTile",	from: "SetDefaults", to: "SetStaticDefaults");
+		RenameRewriter.RenameMethod("Terraria.ModLoader.GlobalWall",	from: "SetDefaults", to: "SetStaticDefaults");
+		RenameRewriter.RenameMethod("Terraria.ModLoader.InfoDisplay",	from: "SetDefaults", to: "SetStaticDefaults");
+		RenameRewriter.RenameMethod("Terraria.ModLoader.ModTile",		from: "SetDefaults", to: "SetStaticDefaults");
+		RenameRewriter.RenameMethod("Terraria.ModLoader.ModWall",		from: "SetDefaults", to: "SetStaticDefaults");
+		RenameRewriter.RenameMethod("Terraria.ModLoader.ModBuff",		from: "SetDefaults", to: "SetStaticDefaults");
+		RenameRewriter.RenameMethod("Terraria.ModLoader.ModDust",		from: "SetDefaults", to: "SetStaticDefaults");
+		RenameRewriter.RenameMethod("Terraria.ModLoader.ModMount",		from: "SetDefaults", to: "SetStaticDefaults");
+		RenameRewriter.RenameMethod("Terraria.ModLoader.ModPrefix",		from: "SetDefaults", to: "SetStaticDefaults");
 	}
 }

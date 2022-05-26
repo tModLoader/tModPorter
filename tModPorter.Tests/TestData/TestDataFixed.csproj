@@ -11,7 +11,8 @@
         <PackageReference Include="tModLoader.CodeAssist" Version="0.1.*" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Remove="*.cs" />
-        <Compile Include="*.Fix.cs" />
+        <Compile Remove="**/*.cs" />
+		<Compile Include="Common/*.cs" />
+        <Compile Include="**/*.Fix.cs" />
     </ItemGroup>
 </Project>

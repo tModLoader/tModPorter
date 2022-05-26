@@ -35,6 +35,15 @@ public class SimpleIdentifiersTest : Mod
 		return player?.Player?.inventory[0]?.ModItem?.Item?.ModItem?.Mod;
 	}
 
+	public void UseRenamedMethods(ModTile modTile, Action<Func<int, int, bool>> accept) {
+		modTile.RightClick(0, 0);
+		modTile?.RightClick(0, 0);
+		accept(modTile.RightClick);
+		Console.Write(modTile.RightClick);
+		((Func<int, int, bool>)modTile.RightClick)(0, 0);
+		((Func<int, int, bool>)modTile.RightClick)?.Invoke(0, 0);
+	}
+
 #if COMPILE_ERROR
 	public void NoChangeCompileErrors()
 	{
