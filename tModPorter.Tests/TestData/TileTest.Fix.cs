@@ -1,5 +1,4 @@
 ﻿using Terraria;
-using Terraria.ModLoader; 
 
 public class TileTest {
 	void UseTileMembers() {

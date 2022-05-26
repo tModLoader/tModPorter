@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using tModPorter.Rewriters;
 using static tModPorter.Rewriters.RenameRewriter;
+using static tModPorter.Rewriters.InvokeRewriter;
 
 namespace tModPorter;
 
@@ -8,6 +9,7 @@ public static class Config
 {
 	public static List<BaseRewriter> CreateRewriters() => new() {
 		new RenameRewriter(),
+		new InvokeRewriter(),
 	};
 
 	static Config() {
@@ -58,5 +60,17 @@ public static class Config
 		RenameMethod("Terraria.ModLoader.ModDust",		from: "SetDefaults", to: "SetStaticDefaults");
 		RenameMethod("Terraria.ModLoader.ModMount",		from: "SetDefaults", to: "SetStaticDefaults");
 		RenameMethod("Terraria.ModLoader.ModPrefix",	from: "SetDefaults", to: "SetStaticDefaults");
+
+		RefactorInstanceMethodCall("Terraria.ModLoader.Mod", "BuffType",		ToFindTypeCall("ModBuff"));
+		RefactorInstanceMethodCall("Terraria.ModLoader.Mod", "DustType",		ToFindTypeCall("ModDust"));
+		RefactorInstanceMethodCall("Terraria.ModLoader.Mod", "ItemType",		ToFindTypeCall("ModItem"));
+		RefactorInstanceMethodCall("Terraria.ModLoader.Mod", "MountType",		ToFindTypeCall("ModMount"));
+		RefactorInstanceMethodCall("Terraria.ModLoader.Mod", "NPCType",			ToFindTypeCall("ModNPC"));
+		RefactorInstanceMethodCall("Terraria.ModLoader.Mod", "PrefixType",		ToFindTypeCall("ModPrefix"));
+		RefactorInstanceMethodCall("Terraria.ModLoader.Mod", "ProjectileType",	ToFindTypeCall("ModProjectile"));
+		RefactorInstanceMethodCall("Terraria.ModLoader.Mod", "TileEntityType",	ToFindTypeCall("ModTileEntity"));
+		RefactorInstanceMethodCall("Terraria.ModLoader.Mod", "TileType",		ToFindTypeCall("ModTile"));
+		RefactorInstanceMethodCall("Terraria.ModLoader.Mod", "WallType",		ToFindTypeCall("ModWall"));
+
 	}
 }

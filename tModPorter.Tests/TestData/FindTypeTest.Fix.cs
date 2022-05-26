@@ -2,7 +2,7 @@ using Terraria.ModLoader;
 
 public abstract class FindTypeTest : Mod
 {
-	void Method(Mod mod) {
+	void ViaMemberAccess(Mod mod) {
 		int a = mod.Find<ModBuff>("BuffClass").Type;
 		int b = mod.Find<ModDust>("DustClass").Type;
 		int c = mod.Find<ModItem>("ItemClass").Type;
@@ -15,16 +15,7 @@ public abstract class FindTypeTest : Mod
 		int j = mod.Find<ModWall>("WallClass").Type;
 	}
 
-	void Method() {
-		int a = Find<ModBuff>("BuffClass").Type;
-		int b = Find<ModDust>("DustClass").Type;
-		int c = Find<ModItem>("ItemClass").Type;
-		int d = Find<ModMount>("MountClass").Type;
-		int e = Find<ModNPC>("NPCClass").Type;
-		int f = Find<ModPrefix>("PrefixClass").Type;
-		int g = Find<ModProjectile>("ProjectileClass").Type;
-		int h = Find<ModTileEntity>("TileEntityClass").Type;
-		int i = Find<ModTile>("TileClass").Type;
-		int j = Find<ModWall>("WallClass").Type;
-	}
+	int ViaIdentifier() => Find<ModBuff>("BuffClass").Type;
+
+	int? ViaConditionalAccess(Mod mod) => mod?.Find<ModBuff>("BuffClass").Type;
 }
