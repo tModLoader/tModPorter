@@ -18,5 +18,6 @@ public static class Extensions
 		type.ToString() == fromTypeName ||
 		type.BaseType != null && InheritsFrom(type.BaseType, fromTypeName) ||
 		type.Interfaces.Any(i => InheritsFrom(i, fromTypeName));
+
 }
 

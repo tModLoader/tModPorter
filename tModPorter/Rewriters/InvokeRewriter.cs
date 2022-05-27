@@ -5,6 +5,8 @@ using Microsoft.CodeAnalysis.Operations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
+using static tModPorter.Rewriters.SimpleSyntaxFactory;
 
 namespace tModPorter.Rewriters;
 
@@ -23,18 +25,17 @@ public class InvokeRewriter : BaseRewriter {
 		if (model.GetOperation(node) is not IInvalidOperation op || node.ArgumentList.Arguments.Any(arg => model.GetOperation(arg) is IInvalidOperation))
 			return node;
 
-		switch (node.Expression) {
-			case MemberAccessExpressionSyntax memberAccess:
-				return Refactor(node, memberAccess.Name, model.GetTypeInfo(memberAccess.Expression).Type);
+		return node.Expression switch {
+			MemberAccessExpressionSyntax memberAccess =>
+				Refactor(node, memberAccess.Name, model.GetTypeInfo(memberAccess.Expression).Type),
 
-			case MemberBindingExpressionSyntax memberBinding:
-				return Refactor(node, memberBinding.Name, ((IConditionalAccessInstanceOperation)op.Children.First()).Type);
+			MemberBindingExpressionSyntax memberBinding when op.Children.First() is IConditionalAccessInstanceOperation target =>
+				Refactor(node, memberBinding.Name, target.Type),
 
-			case IdentifierNameSyntax name:
-				return RefactorViaLookup(node, name);
-		}
+			IdentifierNameSyntax name => RefactorViaLookup(node, name),
 
-		return node;
+			_ => node,
+		};
 	}
 
 	private static SyntaxNode Refactor(InvocationExpressionSyntax node, SimpleNameSyntax nameSyntax, ITypeSymbol targetType) {
@@ -78,11 +79,47 @@ public class InvokeRewriter : BaseRewriter {
 	}
 
 	#region Handlers
+	public static RewriteInvoke AddComment(string comment) => (invoke, methodName) => {
+		return invoke;
+	};
+
+	private static ExpressionSyntax ConvertInvokeToMemberReference(InvocationExpressionSyntax invoke, string memberName) =>
+		invoke.Expression switch {
+			MemberAccessExpressionSyntax memberAccess => SimpleMemberAccessExpression(memberAccess.Expression, memberName).WithTriviaFrom(memberAccess),
+			IdentifierNameSyntax identifierName => IdentifierName(memberName).WithTriviaFrom(identifierName),
+			_ => throw new Exception($"Cannot convert {invoke.Expression.GetType()} to member access")
+		};
+
+
+	public static RewriteInvoke GetterSetterToProperty(string propName, string constantType = null, string constantName = null) => (invoke, methodName) => {
+		return invoke.ArgumentList.Arguments.Count switch {
+			0 => ConvertInvokeToMemberReference(invoke, propName).WithTriviaFrom(invoke),
+
+			1 => SimpleAssignmentExpression(
+					ConvertInvokeToMemberReference(invoke, propName),
+					invoke.ArgumentList.Arguments[0].Expression
+				).WithTriviaFrom(invoke),
+
+			_ => invoke
+		};
+	};
+
+	public static RewriteInvoke GetterToProperty(string propName) => (invoke, methodName) => {
+		if (invoke.ArgumentList.Arguments.Count > 0	)
+			return invoke;
+
+		return ConvertInvokeToMemberReference(invoke, propName).WithTriviaFrom(invoke);
+	};
+
+	public static RewriteInvoke ComparisonFunctionToPropertyEquality(string propName) => (invoke, methodName) => {
+		return invoke;
+	};
+
 	public static RewriteInvoke ToFindTypeCall(string type) => (invoke, methodName) => {
 		// TODO: we should replace the entire NameSyntax with a GenericName, to avoid breaking the tree, rather than making an invalid IdentifierNameSyntax
 		// might be a problem for recursive calls
 		invoke = invoke.ReplaceToken(methodName, methodName.WithText($"Find<{type}>"));
-		return SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, invoke.WithoutTrivia(), SyntaxFactory.IdentifierName("Type")).WithTriviaFrom(invoke);
+		return SimpleMemberAccessExpression(invoke.WithoutTrivia(), "Type").WithTriviaFrom(invoke);
 	};
 	#endregion
 }
