@@ -29,7 +29,7 @@ public class InvokeRewriter : BaseRewriter {
 			MemberAccessExpressionSyntax memberAccess =>
 				Refactor(node, memberAccess.Name, model.GetTypeInfo(memberAccess.Expression).Type),
 
-			MemberBindingExpressionSyntax memberBinding when op.Children.First() is IConditionalAccessInstanceOperation target =>
+			MemberBindingExpressionSyntax memberBinding when op.ChildOperations.First() is IConditionalAccessInstanceOperation target =>
 				Refactor(node, memberBinding.Name, target.Type),
 
 			IdentifierNameSyntax name => RefactorViaLookup(node, name),

@@ -1,8 +1,11 @@
-﻿using static System.Console;
+﻿using System;
+using System.IO;
+using System.Threading.Tasks;
+using static System.Console;
 
-namespace tModPorter.Console;
+namespace tModPorter;
 
-internal class Program {
+public class Program {
 	public static async Task Main(string[] args) {
 		string projectPath = GetProjectPath(args);
 

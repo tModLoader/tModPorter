@@ -22,7 +22,7 @@ public class RenameRewriter : BaseRewriter
 			MemberAccessExpressionSyntax memberAccess when node == memberAccess.Name && MemberReferenceInvalid(memberAccess, out _) =>
 				Refactor(node, model.GetTypeInfo(memberAccess.Expression).Type),
 
-			MemberBindingExpressionSyntax memberBinding when MemberReferenceInvalid(memberBinding, out var op) && op.Children.First() is IConditionalAccessInstanceOperation target =>
+			MemberBindingExpressionSyntax memberBinding when MemberReferenceInvalid(memberBinding, out var op) && op.ChildOperations.First() is IConditionalAccessInstanceOperation target =>
 				Refactor(node, target.Type),
 
 			// getting the operation for errored identifiers as part of the lhs of an initializer expression is difficult directly, need to go via the assignment
